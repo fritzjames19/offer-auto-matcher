@@ -1,4 +1,4 @@
-# GSM-FUJI Offer Matcher
+# Offer Matcher
 
 Open `index.html` in a browser. Upload the customer's Excel list, check the matches, tick the correct ones and save them to memory.
 
