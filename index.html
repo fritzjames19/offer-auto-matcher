@@ -53,7 +53,7 @@ const byCode={};PL.forEach(p=>byCode[p[0].toUpperCase()]=p);
 const $=id=>document.getElementById(id);
 let MEM={};try{MEM=JSON.parse(localStorage.getItem("aom")||"{}")}catch(e){}
 function persist(){try{localStorage.setItem("aom",JSON.stringify(MEM));localStorage.setItem("aou",JSON.stringify(UOM))}catch(e){}$("mc").textContent=Object.keys(MEM).length+" saved matches, "+Object.keys(UOM).length+" UOM links"}
-const SEED={PA:"PKT",PAC:"PKT",PACK:"PKT",PKG:"PKT",PACKET:"PKT",PC:"PCE",PCS:"PCE",PIECE:"PCE",PIECES:"PCE",EA:"PCE",EACH:"PCE",KG:"KGS",KILO:"KGS",BOT:"BTL",BOTTLE:"BTL",L:"LTR",LT:"LTR",LITER:"LTR",LITRE:"LTR",LB:"LBS",CS:"C/S",CASE:"C/S",CT:"CTN",CARTON:"CTN","C/T":"CTN"};
+const SEED={PA:"PKT",PAC:"PKT",PACK:"PKT",PKG:"PKT",PACKET:"PKT",PC:"PCE",PCS:"PCE",PIECE:"PCE",PIECES:"PCE",EA:"PCE",EACH:"PCE",KG:"KGS",KGM:"KGS",KILO:"KGS",BOT:"BTL",BOTTLE:"BTL",L:"LTR",LT:"LTR",LITER:"LTR",LITRE:"LTR",LB:"LBS",CS:"C/S",CASE:"C/S",CT:"CTN",CARTON:"CTN","C/T":"CTN"};
 let UOM=Object.assign({},SEED);try{Object.assign(UOM,JSON.parse(localStorage.getItem("aou")||"{}"))}catch(e){}
 const OURU=[...new Set(PL.map(p=>p[2].toUpperCase()))].sort();
 const canon=u=>{u=String(u||"").trim().toUpperCase();return UOM[u]||u};
@@ -96,9 +96,10 @@ function sz(s){s=String(s||"").toUpperCase().split("SOLD BY")[0].replace(/\d+(\.
 function check(r,p){const why=[];if(!p)return why;
  if(r.uom&&canon(r.uom)!==canon(p[2]))why.push("UOM differs: "+r.uom+" vs "+p[2]);
  const a=sz(r.desc),b=sz(p[1]);if(a&&b&&a.t===b.t&&b.v<a.v*0.98)why.push("Smaller pack: ours "+b.s+" vs "+a.s);return why}
+function odesc(r,p){return(r.uom&&canon(r.uom)===canon(p[2])?"":"QUOTED PRICE/"+p[2]+" - ")+p[1]}
 function draw(){$("tb").innerHTML=ROWS.map((r,i)=>{const p=byCode[(r.our||"").toUpperCase()];
  const w=check(r,p);return`<tr><td>${esc(r.no)}</td><td>${esc(r.code)}</td><td>${esc(r.desc)}</td><td>${esc(r.uom)}</td>
- <td><input class="c" list="codes" value="${esc(r.our)}" data-i="${i}"></td><td>${p?"QUOTED PRICE/"+esc(p[2])+" - "+esc(p[1]):""}</td><td>${p?esc(p[2]):""}</td><td>${w.length?`<span class="rm">PLEASE RECONFIRM ORDER QTY</span><br><span class="rs">${esc(w.join("; "))}</span>`:""}</td>
+ <td><input class="c" list="codes" value="${esc(r.our)}" data-i="${i}"></td><td>${p?esc(odesc(r,p)):""}</td><td>${p?esc(p[2]):""}</td><td>${w.length?`<span class="rm">PLEASE RECONFIRM ORDER QTY</span><br><span class="rs">${esc(w.join("; "))}</span>`:""}</td>
  <td><span class="t ${r.how}">${r.how=="None"?"No match":r.how}</span></td>
  <td><input type="checkbox" data-k="${i}" ${r.ok?"checked":""}></td></tr>`}).join("")}
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -114,7 +115,7 @@ async function saveFile(name,data){let d=null;try{d=window.claude&&await claude.
  const u=URL.createObjectURL(new Blob([data]));const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 $("dl").onclick=()=>{const c=$("cust").value.trim()||"customer";
  const aoa=[["Row No","Customer Code","Customer Description","Customer UOM","Our Code","Our Description","Our UOM","Remarks","Match"]];
- ROWS.forEach(r=>{const p=byCode[(r.our||"").toUpperCase()];aoa.push([r.no,r.code,r.desc,r.uom,r.our,p?"QUOTED PRICE/"+p[2]+" - "+p[1]:"",p?p[2]:"",check(r,p).length?"PLEASE RECONFIRM ORDER QTY":"",r.how=="None"?"":r.how])});
+ ROWS.forEach(r=>{const p=byCode[(r.our||"").toUpperCase()];aoa.push([r.no,r.code,r.desc,r.uom,r.our,p?odesc(r,p):"",p?p[2]:"",check(r,p).length?"PLEASE RECONFIRM ORDER QTY":"",r.how=="None"?"":r.how])});
  const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=[8,16,40,10,12,60,8,28,10].map(w=>({wch:w}));
  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Offer");
  saveFile("Offer_"+c.replace(/[^\w-]+/g,"_")+".xlsx",XLSX.write(wb,{bookType:"xlsx",type:"array"}))};
